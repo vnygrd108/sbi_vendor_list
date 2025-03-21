@@ -1,0 +1,92 @@
+Sub sbi_gorhe_vendor_list()
+    Dim ws As Worksheet
+    Dim lastRowA As Long, lastRowB As Long, lastRow As Long
+    Dim totalRow As Long, textRow As Long, borderRow As Long
+    
+    Set ws = ActiveSheet
+    
+    ' Find last row with data in column A
+    lastRowA = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    ' Find last row with numeric data in column B
+    lastRowB = ws.Cells(ws.Rows.Count, "B").End(xlUp).Row
+    ' Use the greater value to determine the actual last row
+    lastRow = Application.WorksheetFunction.Max(lastRowA, lastRowB)
+    
+    ' AutoFit columns A to L
+    ws.Range("A1:L" & lastRow).Columns.AutoFit
+    
+    ' Set column width for C and D
+    ws.Columns("C:D").ColumnWidth = 2
+
+    ' Format header row
+    With ws.Rows(1)
+        .HorizontalAlignment = xlLeft
+        .Font.Bold = False
+    End With
+
+    ' Apply borders to A1:L (lastRow)
+    With ws.Range("A1:L" & lastRow).Borders
+        .LineStyle = xlContinuous
+        .Weight = xlThin
+    End With
+
+    ' Insert a new row at the top
+    ws.Rows(1).Insert Shift:=xlDown
+
+    ' Set header values
+    ws.Range("E1").Value = "SCST SBI CSR"
+    ws.Range("F1").Value = "Dt:"
+    ws.Range("H1").Value = "GORHE"
+    ws.Range("I1").Value = "'41256726637"
+
+    ' Bold the header row
+    ws.Range("A1:I1").Font.Bold = True
+
+    ' Set additional labels
+    ws.Range("J2").Value = "Address"
+    ws.Range("K2").Value = "Address"
+
+    ' Set column widths
+    ws.Columns("I").ColumnWidth = 19.43
+    ws.Columns("J").ColumnWidth = 15.29
+
+    ' Hide column G
+    ws.Columns("G").Hidden = True
+
+    ' Determine the row to place "Total"
+    totalRow = lastRow + 1
+
+    ' Add "Total" in bold at the new last row of column A
+    ws.Cells(totalRow, 1).Value = "Total"
+    ws.Cells(totalRow, 1).Font.Bold = True
+
+    ' Calculate sum for column B from B3 to last valid row
+    ws.Cells(totalRow, 2).Formula = "=SUM(B3:B" & lastRowB & ")"
+    ws.Cells(totalRow, 2).Font.Bold = True
+    ws.Cells(totalRow, 2).NumberFormat = "0.00" ' Set 2 decimal places
+
+    ' Clear all data from columns C to L in the "Total" row
+    ws.Range(ws.Cells(totalRow, 3), ws.Cells(totalRow, 12)).ClearContents
+
+    ' Determine the row to insert "Prepared by", "Checked by", "Verified by"
+    textRow = totalRow + 3
+    ws.Cells(textRow, 2).Value = "Prepared by"
+    ws.Cells(textRow, 2).Font.Bold = True
+    ws.Cells(textRow, 5).Value = "Checked by"
+    ws.Cells(textRow, 5).Font.Bold = True
+    ws.Cells(textRow, 8).Value = "Verified by"
+    ws.Cells(textRow, 8).Font.Bold = True
+
+    ' Determine the row to apply bottom double border
+    borderRow = textRow + 3
+
+    ' Apply bottom double border from A to H, skipping C and D
+    Dim rng As Range
+    Set rng = ws.Range("A" & borderRow & ":B" & borderRow & ",E" & borderRow & ":H" & borderRow)
+    
+    With rng.Borders(xlEdgeBottom)
+        .LineStyle = xlDouble
+        .Weight = xlThick
+    End With
+
+End Sub
