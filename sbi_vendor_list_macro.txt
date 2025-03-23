@@ -54,20 +54,8 @@ Sub sbi_gorhe_vendor_list()
     ws.Columns("G").Hidden = True
 
     ' Determine the row to place "Total"
-    totalRow = lastRow + 1
-
-    ' Add "Total" in bold at the new last row of column A
-    ws.Cells(totalRow, 1).Value = "Total"
-    ws.Cells(totalRow, 1).Font.Bold = True
-
-    ' Calculate sum for column B from B3 to last valid row
-    ws.Cells(totalRow, 2).Formula = "=SUM(B3:B" & lastRowB & ")"
-    ws.Cells(totalRow, 2).Font.Bold = True
-    ws.Cells(totalRow, 2).NumberFormat = "0.00" ' Set 2 decimal places
-
-    ' Clear all data from columns C to L in the "Total" row
-    ws.Range(ws.Cells(totalRow, 3), ws.Cells(totalRow, 12)).ClearContents
-
+      totalRow = lastRow + 1
+    
     ' Determine the row to insert "Prepared by", "Checked by", "Verified by"
     textRow = totalRow + 3
     ws.Cells(textRow, 2).Value = "Prepared by"
