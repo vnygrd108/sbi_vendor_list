@@ -10,7 +10,6 @@ PROCESSED_FOLDER = "processed"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
-
 def process_vendor_list(file_path):
     date_str = datetime.today().strftime('%d.%m.%Y')
 
@@ -30,7 +29,7 @@ def process_vendor_list(file_path):
     # Ensure 'IFSC CODE' is treated as a string
     vendor_list_sbi['IFSC CODE'] = vendor_list_sbi['IFSC CODE'].astype(str)
 
-    # Insert columns
+    # Insert additional columns
     vendor_list_sbi.insert(2, 'BENIFICIARY TYPE', vendor_list_sbi['IFSC CODE'].apply(lambda x: 'S' if x.startswith('SBIN') else 'O'))
     vendor_list_sbi.insert(3, 'BENIFICIARY ACTION', 'A')
     vendor_list_sbi.insert(6, 'Befinificially Code', '')
@@ -48,6 +47,11 @@ def process_vendor_list(file_path):
 
     # Ensure 'AMT' is numeric and compute total
     vendor_list_sbi['AMT'] = pd.to_numeric(vendor_list_sbi['AMT'], errors='coerce')
+    
+    # Drop NaN values from DataFrame
+    vendor_list_sbi = vendor_list_sbi.dropna()
+
+    # Compute total amount
     total_amt = vendor_list_sbi['AMT'].sum()
 
     # Append total row
@@ -80,7 +84,7 @@ def index():
 
         return redirect(url_for("download_file", filename=output_filename))
 
-    return render_template("index.html")
+    return render_template("vendor.html")
 
 
 @app.route("/download/<filename>")
@@ -93,3 +97,4 @@ def download_file(filename):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
