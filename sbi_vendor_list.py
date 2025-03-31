@@ -11,7 +11,7 @@ PROCESSED_FOLDER = "processed"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
-# Function to clean and trim BENIFICIARY NAME
+# Function to clean and trim BENEFICIARY NAME
 def clean_beneficiary_name(name):
     if pd.isna(name):  # Handle NaN values
         return ""
@@ -19,21 +19,35 @@ def clean_beneficiary_name(name):
     return cleaned_name[:30]  # Trim to 30 characters
 
 def process_vendor_list(file_path):
+    print(f"Processing file: {file_path}")  # Debugging
+
     # Get current date
     date_str = datetime.today().strftime('%d.%m.%Y')
 
-    # Read Excel file
-    vendor_list_sbi = pd.read_excel(file_path, engine="xlrd", dtype={'Bank-A/C': str})
+    # Read Excel file using openpyxl
+    vendor_list_sbi = pd.read_excel(file_path, engine="openpyxl", dtype={'Bank-A/C': str})
 
-    # Rename columns
-    vendor_list_sbi = vendor_list_sbi.rename(columns={
+    # Debugging: Print column names
+    print("Excel Columns Found:", vendor_list_sbi.columns.tolist())
+
+    # Expected Column Renaming
+    column_mapping = {
         'UID': 'R.NO.', 
         'Amount': 'AMT', 
         'Vendor': 'BENIFICIARY NAME', 
         'Bank-A/C': 'AC NO', 
         'IFSC': 'IFSC CODE', 
         'Branch': 'Address'
-    })[['R.NO.', 'AMT', 'BENIFICIARY NAME', 'AC NO', 'IFSC CODE', 'Address']]
+    }
+
+    # Check if all required columns exist
+    missing_columns = [col for col in column_mapping.keys() if col not in vendor_list_sbi.columns]
+    if missing_columns:
+        print(f"Error: Missing columns {missing_columns}")
+        return None, None  # Return failure
+
+    # Rename columns
+    vendor_list_sbi = vendor_list_sbi.rename(columns=column_mapping)[list(column_mapping.values())]
 
     # Ensure 'IFSC CODE' is treated as a string
     vendor_list_sbi['IFSC CODE'] = vendor_list_sbi['IFSC CODE'].astype(str)
@@ -72,6 +86,7 @@ def process_vendor_list(file_path):
     output_path = os.path.join(PROCESSED_FOLDER, output_filename)
     vendor_list_sbi.to_excel(output_path, index=False)
 
+    print(f"File processed and saved as: {output_path}")  # Debugging
     return output_path, output_filename
 
 @app.route("/", methods=["GET", "POST"])
@@ -87,8 +102,13 @@ def index():
         file_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(file_path)
 
+        print(f"File uploaded: {file_path}")  # Debugging
+
         # Process file
         output_path, output_filename = process_vendor_list(file_path)
+
+        if not output_path:  # If processing failed
+            return "Error processing file. Check column names.", 400
 
         return render_template("vendor.html", download_link=output_filename)
 
@@ -100,4 +120,5 @@ def download_file(filename):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
