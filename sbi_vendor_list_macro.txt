@@ -2,62 +2,104 @@ Sub sbi_gorhe_vendor_list()
     Dim ws As Worksheet
     Dim lastRowA As Long, lastRowB As Long, lastRow As Long
     Dim totalRow As Long, textRow As Long, borderRow As Long
-    
+    Dim selectedAcc As String
+    Dim accountName As String
+    Dim isValid As Boolean
+
     Set ws = ActiveSheet
-    
-    ' Find last row with data in column A
+
+    ' Ask user to type the account number
+    Do
+        selectedAcc = Application.InputBox( _
+            Prompt:="Enter one of the following Account Numbers:" & vbCrLf & _
+                    "• SBI Gram Seva     : 41256726637" & vbCrLf & _
+                    "• SBI Gram Saksham  : 43557115725" & vbCrLf & _
+                    "• SBI SCST          : 34889306900" & vbCrLf & _
+                    "• SBI Wadi          : 40237416058", _
+            Title:="Enter Account Number", Type:=2)
+
+        ' If user cancels
+        If selectedAcc = "False" Then
+            MsgBox "Cancelled by user.", vbExclamation
+            Exit Sub
+        End If
+
+        ' Validate input and set account name
+        isValid = False
+        Select Case selectedAcc
+            Case "41256726637"
+                isValid = True: accountName = "SBI Gram Seva"
+            Case "43557115725"
+                isValid = True: accountName = "SBI Gram Saksham"
+            Case "34889306900"
+                isValid = True: accountName = "SBI SCST"
+            Case "40237416058"
+                isValid = True: accountName = "SBI Wadi"
+        End Select
+
+        If Not isValid Then
+            MsgBox "Invalid account number. Please try again.", vbCritical
+        End If
+    Loop Until isValid
+
+    ' Find last row from column A and B
     lastRowA = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
-    ' Find last row with numeric data in column B
     lastRowB = ws.Cells(ws.Rows.Count, "B").End(xlUp).Row
-    ' Use the greater value to determine the actual last row
     lastRow = Application.WorksheetFunction.Max(lastRowA, lastRowB)
-    
+
     ' AutoFit columns A to L
     ws.Range("A1:L" & lastRow).Columns.AutoFit
-    
+
     ' Set column width for C and D
     ws.Columns("C:D").ColumnWidth = 2
 
-    ' Format header row
+    ' Format row 1
     With ws.Rows(1)
         .HorizontalAlignment = xlLeft
         .Font.Bold = False
     End With
 
-    ' Apply borders to A1:L (lastRow)
+    ' Apply borders
     With ws.Range("A1:L" & lastRow).Borders
         .LineStyle = xlContinuous
         .Weight = xlThin
     End With
 
-    ' Insert a new row at the top
+    ' Insert top row
     ws.Rows(1).Insert Shift:=xlDown
 
-    ' Set header values
-    ws.Range("E1").Value = "SCST SBI CSR"
-    ws.Range("F1").Value = "Dt:"
-    ws.Range("H1").Value = "GORHE"
-    ws.Range("I1").Value = "'41256726637"
+    ' Conditional E1 value
+    If selectedAcc = "34889306900" Then
+        ws.Range("E1").Value = "SCST SBI"
+    Else
+        ws.Range("E1").Value = "SCST SBI CSR"
+    End If
 
-    ' Bold the header row
+    ' Set F1 date
+    ws.Range("F1").Value = "Dt: " & Format(Date, "dd-mmm-yyyy")
+
+    ' Other header values
+    ws.Range("H1").Value = "GORHE"
+    ws.Range("I1").Value = "'" & selectedAcc
+
+    ' Bold header row
     ws.Range("A1:I1").Font.Bold = True
 
-    ' Set additional labels
+    ' Address fields
     ws.Range("J2").Value = "Address"
     ws.Range("K2").Value = "Address"
 
-    ' Set column widths
+    ' Column widths
     ws.Columns("I").ColumnWidth = 19.43
     ws.Columns("J").ColumnWidth = 15.29
 
     ' Hide column G
     ws.Columns("G").Hidden = True
 
-    ' Determine the row to place "Total"
-      totalRow = lastRow + 1
-    
-    ' Determine the row to insert "Prepared by", "Checked by", "Verified by"
+    ' Signature lines
+    totalRow = lastRow + 1
     textRow = totalRow + 3
+
     ws.Cells(textRow, 2).Value = "Prepared by"
     ws.Cells(textRow, 2).Font.Bold = True
     ws.Cells(textRow, 5).Value = "Checked by"
@@ -65,16 +107,16 @@ Sub sbi_gorhe_vendor_list()
     ws.Cells(textRow, 8).Value = "Verified by"
     ws.Cells(textRow, 8).Font.Bold = True
 
-    ' Determine the row to apply bottom double border
+    ' Double bottom border
     borderRow = textRow + 3
-
-    ' Apply bottom double border from A to H, skipping C and D
     Dim rng As Range
     Set rng = ws.Range("A" & borderRow & ":B" & borderRow & ",E" & borderRow & ":H" & borderRow)
-    
+
     With rng.Borders(xlEdgeBottom)
         .LineStyle = xlDouble
         .Weight = xlThick
     End With
 
+    ' Final confirmation message
+    MsgBox "Formatting complete with account: " & accountName & " (" & selectedAcc & ")", vbInformation
 End Sub
